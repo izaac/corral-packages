@@ -79,43 +79,56 @@ build_image () {
 
 }
 
+setup_post_data() {
+  cat <<EOF
+{
+  "username": "admin",
+  "password": "$CORRAL_bootstrap_password"
+}
+EOF
+}
+
 rancher_init () {
   RANCHER_HOST=$1
   SERVER_URL="https://$2"
   new_password="$3"
+  no_setup="${4}"
 
   # Get the admin token using the initial bootstrap password
   rancher_token=`curl -s -k -X POST "https://${RANCHER_HOST}/v3-public/localProviders/local?action=login" \
     -H "Content-Type: application/json" \
-    -d '{"username":"admin","password": "password"}' | grep -o '"token":"[^"]*' | grep -o '[^"]*$'`
+    -d "$(setup_post_data)" | grep -o '"token":"[^"]*' | grep -o '[^"]*$'`
   echo "TOKEN: ${rancher_token}"
 
-  # Get the correct URL to set newPassword
-  PASSWORD_URL=`curl -s -k -X GET "https://${RANCHER_HOST}/v3/users?username=admin" \
-    -H "Content-Type: application/json" \
-    -H "Authorization: Bearer ${rancher_token}" |  grep -o '"setpassword":"[^"]*' | grep -o '[^"]*$'`
-  echo "PASSWORD_URL: ${PASSWORD_URL}"
+  if [[ -z "${no_setup}" ]]; then
 
-  # Set the new password
-  PASSWORD_PAYLOAD="{\"newPassword\": \"${new_password}\"}"
-  curl -s -k -X POST "${PASSWORD_URL}" \
-    -H "Content-Type: application/json" \
-    -H "Authorization: Bearer ${rancher_token}" \
-    -d "${PASSWORD_PAYLOAD}"
+    # Get the correct URL to set newPassword
+    PASSWORD_URL=`curl -s -k -X GET "https://${RANCHER_HOST}/v3/users?username=admin" \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer ${rancher_token}" |  grep -o '"setpassword":"[^"]*' | grep -o '[^"]*$'`
+    echo "PASSWORD_URL: ${PASSWORD_URL}"
 
-  # After the above. Rancher will show the login page 
-  # but the server-url setting will be empty.
-  # This will configure the server-url
-  curl -s -k -X PUT "https://${RANCHER_HOST}/v3/settings/server-url" \
-    -H "Authorization: Bearer ${rancher_token}" \
-    -H 'Content-Type: application/json' \
-    --data-binary "{\"name\": \"server-url\", \"value\":\"${SERVER_URL}\"}"
-  
-  # Add standard user
-  curl -s -k -X POST "https://${RANCHER_HOST}/v3/users" \
-    -H "Authorization: Bearer ${rancher_token}" \
-    -H 'Content-Type: application/json' \
-    -d "{\"enabled\": true, \"mustChangePassword\": false, \"password\": \"${CORRAL_rancher_password}\", \"username\": \"standard_user\"}"
+    # Set the new password
+    PASSWORD_PAYLOAD="{\"newPassword\": \"${new_password}\"}"
+    curl -s -k -X POST "${PASSWORD_URL}" \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer ${rancher_token}" \
+        -d "${PASSWORD_PAYLOAD}"
+
+    # After the above. Rancher will show the login page
+    # but the server-url setting will be empty.
+    # This will configure the server-url
+    curl -s -k -X PUT "https://${RANCHER_HOST}/v3/settings/server-url" \
+        -H "Authorization: Bearer ${rancher_token}" \
+        -H 'Content-Type: application/json' \
+        --data-binary "{\"name\": \"server-url\", \"value\":\"${SERVER_URL}\"}"
+
+    # Add standard user
+    curl -s -k -X POST "https://${RANCHER_HOST}/v3/users" \
+        -H "Authorization: Bearer ${rancher_token}" \
+        -H 'Content-Type: application/json' \
+        -d "{\"enabled\": true, \"mustChangePassword\": false, \"password\": \"${CORRAL_rancher_password}\", \"username\": \"standard_user\"}"
+  fi
 
   branch_from_rancher=`curl -s -k -X GET "https://${RANCHER_HOST}/dashboard/about" \
     -H "Accept: text/html,application/xhtml+xml,application/xml" \
@@ -157,27 +170,19 @@ if [ ${CORRAL_rancher_type} = "existing" ]; then
     exit_code=$?
 elif  [ ${CORRAL_rancher_type} = "recurring" ]; then
     TEST_USERNAME="admin"
-    rancher_init ${CORRAL_rancher_host} ${CORRAL_rancher_host} ${CORRAL_rancher_password}
+    rancher_init ${CORRAL_rancher_host} ${CORRAL_rancher_host} ${CORRAL_rancher_password} "no_setup"
     build_image ${branch_from_rancher}
     TEST_BASE_URL="https://${CORRAL_rancher_host}/dashboard"
-
-    rancher_username="${CORRAL_rancher_username}"
-
-    case "${CORRAL_cypress_tags}" in
-        *"@standardUser"* )
-            rancher_username="standard_user"
-            ;;
-    esac
 
     docker run --name "${CORRAL_rancher_host}" -t \
       -e CYPRESS_VIDEO=false \
       -e CYPRESS_VIEWPORT_WIDTH="${VIEWPORT_WIDTH}" \
       -e CYPRESS_VIEWPORT_HEIGHT="${VIEWPORT_HEIGHT}" \
       -e TEST_BASE_URL="${TEST_BASE_URL}" \
-      -e TEST_USERNAME="${rancher_username}" \
+      -e TEST_USERNAME="${CORRAL_rancher_username}" \
       -e TEST_PASSWORD="${CORRAL_rancher_password}" \
-      -e TEST_SKIP_SETUP=true \
-      -e TEST_SKIP=setup \
+      -e CATTLE_BOOTSTRAP_PASSWORD="${CORRAL_rancher_password}" \
+      -e TEST_SKIP_SETUP=false \
       -e AWS_ACCESS_KEY_ID=${CORRAL_aws_access_key} \
       -e AWS_SECRET_ACCESS_KEY=${CORRAL_aws_secret_key} \
       -v "${HOME}":/e2e \
