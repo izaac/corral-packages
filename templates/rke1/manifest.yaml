@@ -7,6 +7,9 @@ variables:
     type: string
   kubernetes_version:
     type: string
+  rke1_version:
+    type: string
+    optional: true
   kubeconfig:
     type: string
     readOnly: true

@@ -1,11 +1,18 @@
 #!/bin/bash
 
 KUBERNETES_VERSION=${CORRAL_kubernetes_version}
+RKE1_VERSION=${CORRAL_rke1_version}
 CNI=${CORRAL_cni}
+GITHUB_BASE_URL="https://github.com/rancher/rke/releases"
 
-# install the latest version of RKE cli
-curl -0Ls https://github.com/rancher/rke/releases/latest/download/rke_linux-amd64 >rke
-chmod +x rke
+if [[ -z "${RKE1_VERSION}" ]]; then
+    # install the latest version of RKE cli
+    curl -0Ls "${GITHUB_BASE_URL}/latest/download/rke_linux-amd64" >rke
+    chmod +x rke
+else
+    curl -0Ls "${GITHUB_BASE_URL}/download/${RKE1_VERSION}/rke_linux-amd64" >rke
+    chmod +x rke
+fi
 
 # install the latest version of yq (below written in v4.35.2)
 curl -0Ls https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 >yq
