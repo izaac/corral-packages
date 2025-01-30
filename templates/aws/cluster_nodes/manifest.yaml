@@ -44,6 +44,7 @@ variables:
   aws_volume_size:
     type: integer
     optional: false
+    default: 50
     description: "The volume size of a node"
   aws_volume_type:
     type: string
