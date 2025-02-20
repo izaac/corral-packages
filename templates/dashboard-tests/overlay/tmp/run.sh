@@ -159,6 +159,7 @@ rancher_init () {
   if [[ -z "${branch_from_rancher}" ]]; then
     is_it_latest=`curl -s -k -X GET "https://${RANCHER_HOST}/dashboard/about" \
     -H "Accept: text/html,application/xhtml+xml,application/xml" \
+    -H "Authorization: Bearer ${rancher_token}" | grep -q "dashboard/latest/"`
     if [[ ${is_it_latest} -eq 1 ]]; then
       echo "Error: The dashboard branch returned empty"
       exit 1
