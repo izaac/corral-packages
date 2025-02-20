@@ -38,11 +38,11 @@ build_image () {
     git clone -b "${dashboard_branch}" \
       "${GITHUB_URL}${CORRAL_dashboard_repo}" ${HOME}/dashboard
 
-    #if [[ "${dashboard_branch}" != "master" ]]; then
-    #  rm -rf ${HOME}/dashboard/cypress/jenkins
-    #  curl https://codeload.github.com/rancher/dashboard/tar.gz/master |  tar -xz --strip=2 dashboard-master/cypress/jenkins
-    #  mv ${HOME}/jenkins ${HOME}/dashboard/cypress/
-    #fi
+    # if [[ "${dashboard_branch}" != "master" ]]; then
+    #   rm -rf ${HOME}/dashboard/cypress/jenkins
+    #   curl https://codeload.github.com/rancher/dashboard/tar.gz/master |  tar -xz --strip=2 dashboard-master/cypress/jenkins
+    #   mv ${HOME}/jenkins ${HOME}/dashboard/cypress/
+    # fi
 
     shopt -s nocasematch
     if [[ "${CORRAL_create_initial_clusters}" == "no" ]]; then
@@ -154,7 +154,6 @@ rancher_init () {
   branch_from_rancher=`curl -s -k -X GET "https://${RANCHER_HOST}/v1/management.cattle.io.settings" \
     -H "Accept: application/json" \
     -H "Authorization: Bearer ${rancher_token}" | grep -o '"default":"[^"]*' | grep -o '[^"]*$' | grep release- | sed -E 's/^\s*.*:\/\///g' | cut -d'/' -f 3 | tail -n 1`
-    -H "Authorization: Bearer ${rancher_token}" | grep -q "dashboard/latest/"`
 
   if [[ -z "${branch_from_rancher}" ]]; then
     is_it_latest=`curl -s -k -X GET "https://${RANCHER_HOST}/dashboard/about" \
@@ -186,8 +185,8 @@ if [ ${CORRAL_rancher_type} = "existing" ]; then
 elif  [ ${CORRAL_rancher_type} = "recurring" ]; then
     TEST_USERNAME="admin"
     rancher_init ${CORRAL_rancher_host} ${CORRAL_rancher_host} ${CORRAL_rancher_password}
-    # build_image ${branch_from_rancher}
     build_image jenkins_cypress_config
+    #build_image ${branch_from_rancher}
     TEST_BASE_URL="https://${CORRAL_rancher_host}/dashboard"
 
     rancher_username="${CORRAL_rancher_username}"
