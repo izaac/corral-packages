@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  openldap:
+    image: osixia/openldap:latest
+    container_name: openldap
+    environment:
+      LDAP_BASE_DN: "dc=example,dc=org"
+      LDAP_ORGANISATION: "Example Organization"
+      LDAP_DOMAIN: "example.org"
+      LDAP_ADMIN_PASSWORD: "P4ssw0rd123"
+      LDAP_TLS: "false"
+    volumes:
+      - ./ldap-bootstrap.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/50-bootstrap.ldif
+    ports:
+      - "389:389"
+    command: --copy-service
+    restart: unless-stopped

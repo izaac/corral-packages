@@ -1,0 +1,9 @@
+manifest:
+  name: uiauth
+  description: Run the Ui test automation suite
+templates:
+  - aws/nodes
+  - dashboard-auth
+variables:
+  instance_type:
+    - t3a.xlarge

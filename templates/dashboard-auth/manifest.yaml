@@ -1,0 +1,12 @@
+name: auth
+description: |
+  Package for authentication providers to assist the Dashboard UI tests
+variables:
+  docker_compose:
+    type: string
+    description: "Has docker compose"
+    default: yes 
+commands:
+  - command: /tmp/run.sh
+    node_pools:
+      - node
