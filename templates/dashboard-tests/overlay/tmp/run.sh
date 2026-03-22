@@ -78,7 +78,7 @@ build_image () {
     npm install -g yarn
     yarn config set ignore-engines true --silent
     
-    yarn add cypress@${CYPRESS_VERSION} --exact -W && yarn install --frozen-lockfile
+    yarn add cypress@${CYPRESS_VERSION} --exact -W && find cypress/e2e/tests -name "*.spec.ts" -exec sed -i "s/testIsolation: [\"'']off[\"'']/testIsolation: false/g" {} + && yarn install --frozen-lockfile
 
     # Debugging node_modules
     if [ -d "node_modules/cypress-multi-reporters" ]; then
