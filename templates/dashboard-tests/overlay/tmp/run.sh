@@ -19,7 +19,7 @@ NODEJS_VERSION="${NODEJS_VERSION:-${CORRAL_nodejs_version:-24.14.0}}"
 NODEJS_DOWNLOAD_URL="https://nodejs.org/dist"
 NODEJS_FILE="node-v${NODEJS_VERSION}-linux-x64.tar.xz"
 YARN_VERSION="${YARN_VERSION:-${CORRAL_yarn_version:-1.22.22}}"
-CYPRESS_VERSION="${CYPRESS_VERSION:-${CORRAL_cypress_version:-11.1.0}}"
+CYPRESS_VERSION="${CYPRESS_VERSION:-${CORRAL_cypress_version:-15.12.0}}"
 CHROME_VERSION="${CHROME_VERSION:-${CORRAL_chrome_version:-}}"
 KUBECTL_VERSION="${KUBECTL_VERSION:-${CORRAL_kubectl_version:-v1.29.8}}"
 NODE_PATH="${PWD}/nodejs"
@@ -78,7 +78,7 @@ build_image () {
     npm install -g yarn
     yarn config set ignore-engines true --silent
     
-    yarn install --frozen-lockfile
+    yarn add cypress@${CYPRESS_VERSION} --exact && yarn install --frozen-lockfile
 
     # Debugging node_modules
     if [ -d "node_modules/cypress-multi-reporters" ]; then
